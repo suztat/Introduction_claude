@@ -134,10 +134,12 @@ class TestTaskManager:
 
     def test_task_priorities(self, task_manager):
         """Test different priority levels"""
+        urgent_task = task_manager.add_task("Urgent priority", priority="urgent")
         high_task = task_manager.add_task("High priority", priority="high")
         medium_task = task_manager.add_task("Medium priority", priority="medium")
         low_task = task_manager.add_task("Low priority", priority="low")
 
+        assert urgent_task["priority"] == "urgent"
         assert high_task["priority"] == "high"
         assert medium_task["priority"] == "medium"
         assert low_task["priority"] == "low"
@@ -176,10 +178,12 @@ class TestFormatTask:
 
     def test_format_task_all_priorities(self):
         """Test formatting tasks with different priorities"""
-        high_task = {"id": 1, "description": "High", "priority": "high", "completed": False}
-        medium_task = {"id": 2, "description": "Medium", "priority": "medium", "completed": False}
-        low_task = {"id": 3, "description": "Low", "priority": "low", "completed": False}
+        urgent_task = {"id": 1, "description": "Urgent", "priority": "urgent", "completed": False}
+        high_task = {"id": 2, "description": "High", "priority": "high", "completed": False}
+        medium_task = {"id": 3, "description": "Medium", "priority": "medium", "completed": False}
+        low_task = {"id": 4, "description": "Low", "priority": "low", "completed": False}
 
+        assert "🚨" in format_task(urgent_task)
         assert "🔴" in format_task(high_task)
         assert "🟡" in format_task(medium_task)
         assert "🟢" in format_task(low_task)

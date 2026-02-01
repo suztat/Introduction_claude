@@ -4,7 +4,7 @@ A simple, lightweight command-line task management tool written in Python.
 
 ## Features
 
-- ✅ Add tasks with priorities (low, medium, high)
+- ✅ Add tasks with priorities (low, medium, high, urgent)
 - 📋 List active and completed tasks
 - ✓ Mark tasks as completed
 - 🗑️ Delete tasks
@@ -47,6 +47,7 @@ chmod +x task_cli.py
 
 ```bash
 python task_cli.py add "Finish project documentation"
+python task_cli.py add "Fix critical bug" -p urgent
 python task_cli.py add "Review pull requests" -p high
 python task_cli.py add "Update dependencies" --priority low
 ```
@@ -120,7 +121,8 @@ Tasks are stored in a `tasks.json` file in the current working directory. The fi
 
 ## Priority Levels
 
-- 🔴 **High**: Urgent and important tasks
+- 🚨 **Urgent**: Critical and time-sensitive tasks that require immediate attention
+- 🔴 **High**: Important tasks with high priority
 - 🟡 **Medium**: Normal priority tasks (default)
 - 🟢 **Low**: Nice-to-have tasks
 
