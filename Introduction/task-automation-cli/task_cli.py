@@ -77,6 +77,7 @@ def format_task(task: Dict) -> str:
     """Format a task for display"""
     status = "✓" if task["completed"] else "○"
     priority_symbols = {
+        "urgent": "🚨",
         "high": "🔴",
         "medium": "🟡",
         "low": "🟢"
@@ -97,7 +98,7 @@ def main():
     add_parser.add_argument("description", help="Task description")
     add_parser.add_argument(
         "-p", "--priority",
-        choices=["low", "medium", "high"],
+        choices=["low", "medium", "high", "urgent"],
         default="medium",
         help="Task priority (default: medium)"
     )
