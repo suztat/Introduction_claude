@@ -1,6 +1,17 @@
 #!/usr/bin/env python3
 """
 Task Automation CLI - A simple command-line task management tool
+
+This module provides a command-line interface for managing tasks with
+priorities, completion tracking, and persistent JSON storage.
+
+Example:
+    $ python task_cli.py add "Complete documentation" -p high
+    $ python task_cli.py list
+    $ python task_cli.py complete 1
+
+Author: Task Automation CLI Contributors
+License: MIT
 """
 
 import json
@@ -11,15 +22,48 @@ from typing import List, Dict, Optional
 
 
 class TaskManager:
-    """Manages tasks stored in a JSON file"""
+    """
+    Manages tasks with persistent JSON storage.
+
+    This class handles task creation, retrieval, completion, and deletion,
+    with automatic persistence to a JSON file.
+
+    Attributes:
+        data_file: Path to the JSON file for storing tasks
+        tasks: List of task dictionaries
+
+    Example:
+        >>> manager = TaskManager("my_tasks.json")
+        >>> task = manager.add_task("Buy groceries", priority="high")
+        >>> tasks = manager.list_tasks()
+    """
 
     def __init__(self, data_file: str = "tasks.json"):
-        """Initialize TaskManager with a data file path"""
+        """
+        Initialize TaskManager with a data file path.
+
+        Args:
+            data_file: Path to the JSON file for storing tasks.
+                      Defaults to "tasks.json" in the current directory.
+
+        Note:
+            If the file doesn't exist, it will be created automatically
+            when the first task is added.
+        """
         self.data_file = data_file
         self.tasks: List[Dict] = self._load_tasks()
 
     def _load_tasks(self) -> List[Dict]:
-        """Load tasks from JSON file"""
+        """
+        Load tasks from JSON file.
+
+        Returns:
+            List of task dictionaries. Returns empty list if file doesn't
+            exist or contains invalid JSON.
+
+        Note:
+            This is a private method called during initialization.
+        """
         if os.path.exists(self.data_file):
             try:
                 with open(self.data_file, 'r', encoding='utf-8') as f:
@@ -29,12 +73,41 @@ class TaskManager:
         return []
 
     def _save_tasks(self) -> None:
-        """Save tasks to JSON file"""
+        """
+        Save tasks to JSON file.
+
+        Writes the current tasks list to the JSON file with UTF-8 encoding
+        and pretty-printing (2-space indentation).
+
+        Note:
+            This is a private method called after any task modification.
+        """
         with open(self.data_file, 'w', encoding='utf-8') as f:
             json.dump(self.tasks, f, indent=2, ensure_ascii=False)
 
     def add_task(self, description: str, priority: str = "medium") -> Dict:
-        """Add a new task"""
+        """
+        Add a new task with the specified description and priority.
+
+        Args:
+            description: The task description text
+            priority: Priority level - one of "low", "medium", "high", or "urgent".
+                     Defaults to "medium".
+
+        Returns:
+            Dictionary containing the created task with fields:
+            - id: Unique task identifier
+            - description: Task description
+            - priority: Priority level
+            - completed: Completion status (always False for new tasks)
+            - created_at: ISO format timestamp of creation
+            - completed_at: Completion timestamp (None for new tasks)
+
+        Example:
+            >>> task = manager.add_task("Write tests", priority="high")
+            >>> print(task["id"])
+            1
+        """
         task = {
             "id": len(self.tasks) + 1,
             "description": description,
@@ -48,13 +121,41 @@ class TaskManager:
         return task
 
     def list_tasks(self, show_completed: bool = False) -> List[Dict]:
-        """List all tasks or only active tasks"""
+        """
+        List tasks, optionally including completed ones.
+
+        Args:
+            show_completed: If True, return all tasks including completed.
+                           If False (default), return only active tasks.
+
+        Returns:
+            List of task dictionaries matching the filter criteria.
+
+        Example:
+            >>> active_tasks = manager.list_tasks()
+            >>> all_tasks = manager.list_tasks(show_completed=True)
+        """
         if show_completed:
             return self.tasks
         return [task for task in self.tasks if not task["completed"]]
 
     def complete_task(self, task_id: int) -> Optional[Dict]:
-        """Mark a task as completed"""
+        """
+        Mark a task as completed and record the completion time.
+
+        Args:
+            task_id: The unique ID of the task to complete
+
+        Returns:
+            The completed task dictionary if found, None otherwise.
+            The task will have its 'completed' field set to True and
+            'completed_at' set to the current timestamp.
+
+        Example:
+            >>> task = manager.complete_task(1)
+            >>> if task:
+            ...     print(f"Completed: {task['description']}")
+        """
         for task in self.tasks:
             if task["id"] == task_id:
                 task["completed"] = True
@@ -64,7 +165,25 @@ class TaskManager:
         return None
 
     def delete_task(self, task_id: int) -> bool:
-        """Delete a task by ID"""
+        """
+        Permanently delete a task by its ID.
+
+        Args:
+            task_id: The unique ID of the task to delete
+
+        Returns:
+            True if the task was found and deleted, False otherwise.
+
+        Warning:
+            This operation is irreversible. The task will be permanently
+            removed from the JSON file.
+
+        Example:
+            >>> if manager.delete_task(1):
+            ...     print("Task deleted successfully")
+            ... else:
+            ...     print("Task not found")
+        """
         initial_length = len(self.tasks)
         self.tasks = [task for task in self.tasks if task["id"] != task_id]
         if len(self.tasks) < initial_length:
@@ -74,7 +193,33 @@ class TaskManager:
 
 
 def format_task(task: Dict) -> str:
-    """Format a task for display"""
+    """
+    Format a task dictionary as a display string with status and priority.
+
+    Args:
+        task: Task dictionary containing 'id', 'description', 'priority',
+              and 'completed' fields
+
+    Returns:
+        Formatted string in the format:
+        "[ID] STATUS PRIORITY_SYMBOL Description"
+
+        Status symbols:
+        - ✓ for completed tasks
+        - ○ for active tasks
+
+        Priority symbols:
+        - 🚨 for urgent priority
+        - 🔴 for high priority
+        - 🟡 for medium priority
+        - 🟢 for low priority
+        - ⚪ for unknown priority
+
+    Example:
+        >>> task = {"id": 1, "description": "Test", "priority": "high", "completed": False}
+        >>> print(format_task(task))
+        [1] ○ 🔴 Test
+    """
     status = "✓" if task["completed"] else "○"
     priority_symbols = {
         "urgent": "🚨",
@@ -87,7 +232,24 @@ def format_task(task: Dict) -> str:
 
 
 def main():
-    """Main CLI entry point"""
+    """
+    Main CLI entry point - parse arguments and execute commands.
+
+    This function sets up the argument parser with subcommands for:
+    - add: Add a new task
+    - list: List tasks
+    - complete: Mark a task as completed
+    - delete: Delete a task
+
+    The function parses command-line arguments, initializes TaskManager,
+    and executes the requested command.
+
+    Example:
+        $ python task_cli.py add "My task" -p high
+        $ python task_cli.py list
+        $ python task_cli.py complete 1
+        $ python task_cli.py delete 2
+    """
     parser = argparse.ArgumentParser(
         description="Task Automation CLI - Manage your tasks from the command line"
     )
